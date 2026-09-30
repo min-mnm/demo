@@ -10,9 +10,11 @@ import com.example.demo.model.service.TestService;
 
 @Controller // 컨트롤러 어노테이션 명시
  public class DemoController {
+    private final TestService testService;
 
-    @Autowired
-    TestService testService; // DemoController
+    public DemoController(TestService testService) {
+        this.testService = testService;
+    }
 
     @GetMapping("/hello") // 전송 방식 GET
     public String hello(Model model) {
