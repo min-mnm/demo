@@ -3,6 +3,8 @@ package com.example.demo.model.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,7 +25,9 @@ public class PostService {
     private PostRepository postRepository;
     @Autowired
     private MemberRepository memberRepository;
-    public List<Post> findAll() { // 전체 목록 (최신 글이 위로)
+
+    // 전체 목록 (최신 글이 위로)
+    public List<Post> findAll() { 
         return postRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
 }
     public Post write(PostForm form, String username) { // 글쓰기 (작성자 = 로그인한 회원)
@@ -46,6 +50,18 @@ public class PostService {
             throw new IllegalArgumentException("제목은 100자까지 입력할 수 있습니다.");
         }
     }
+
+    public static final int PAGE_SIZE = 10; // 한 페이지에 보여 줄 글 수
+    // [10주차] 단계 2 : 페이지 목록 + 검색 (검색어가 없으면 전체)
+    public Page<Post> findPage(String keyword, int page) {
+        PageRequest pageable = PageRequest.of(Math.max(page, 0), PAGE_SIZE, Sort.by(Sort.Direction.DESC, "id"));
+            if (keyword == null || keyword.isBlank()) { // 앞이 true면 뒤를 실행하지 않음
+            return postRepository.findAll(pageable);
+        }
+    return postRepository.search(keyword.trim(), pageable); // 검색 결과도 10개씩
+    }
+
+
     public Post findById(Long id) { // 글 1개 (없으면 404 → templates/error/404.html)
         return postRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "글이 존재하지 않습니다."));
